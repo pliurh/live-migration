@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod-default
+  # annotations:
+  #   v1.multus-cni.io/default-network: default/ovnkube
+  labels:
+    pod-name: testpod-default
+spec:
+  privileged: true
+  containers:
+    - name: testpod-default
+      image: quay.io/pliurh/net-test-image:0.1
+      command:
+        - "iperf3"
+      args: ["-s", "-p", "{{ iperf_clusterip_pod_svc_port }}"]
+      imagePullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/hostname: worker-0
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod-1
+  # annotations:
+  #   v1.multus-cni.io/default-network: default/ovnkube
+  labels:
+    pod-name: testpod-1
+spec:
+  privileged: true
+  containers:
+    - name: testpod-1
+      image: quay.io/pliurh/net-test-image:0.1
+      command:
+        - "iperf3"
+      args: ["-s", "-p", "{{ iperf_clusterip_pod_svc_port }}"]
+      imagePullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/hostname: worker-1

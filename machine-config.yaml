@@ -1,0 +1,54 @@
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: worker-iptables-rules
+  labels:
+    machineconfiguration.openshift.io/role: worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:,%23%21%2Fbin%2Fbash%0Aset%20-eux%20-o%20pipefail%0Atable%3D%22nat%22%0Achain_name%3D%22OVN-KUBE-SNAT-MGMTPORT%22%0A%0Achain_exists%28%29%0A%7B%0A%20%20%20%20local%20chain_name%3D%22%241%22%20%3B%20shift%0A%20%20%20%20%5B%20%24%23%20-eq%201%20%5D%20%26%26%20local%20table%3D%22--table%20%241%22%0A%20%20%20%20iptables%20-t%20%24%7Btable%7D%20-n%20--list%20%22%24%7Bchain_name%7D%22%20%3E%2Fdev%2Fnull%202%3E%261%0A%7D%0A%0Auntil%0A%20%20chain_exists%20%24%7Bchain_name%7D%0Ado%0A%20%20sleep%203%0A%20%20echo%20%22chain%20%24%7Bchain_name%7D%20no%20ready%22%0Adone%0Aiptables%20-t%20%24%7Btable%7D%20-I%20%24%7Bchain_name%7D%20-s%2010.128.0.0%2F14%20-o%20ovn-k8s-mp0%20-j%20ACCEPT%0A
+          verification: {}
+        mode: 0755
+        overwrite: true
+        path: /usr/local/bin/configure-migration-iptables-rules.sh
+    systemd:
+      units:
+      - dropins:
+        - contents: |
+            [Service]
+            ExecStartPost=/usr/local/bin/configure-migration-iptables-rules.sh
+          name: 20-migration-iptables-rules.conf
+        name: kubelet.service
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: master-iptables-rules
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+      - contents:
+          source: data:,%23%21%2Fbin%2Fbash%0Aset%20-eux%20-o%20pipefail%0Atable%3D%22nat%22%0Achain_name%3D%22OVN-KUBE-SNAT-MGMTPORT%22%0A%0Achain_exists%28%29%0A%7B%0A%20%20%20%20local%20chain_name%3D%22%241%22%20%3B%20shift%0A%20%20%20%20%5B%20%24%23%20-eq%201%20%5D%20%26%26%20local%20table%3D%22--table%20%241%22%0A%20%20%20%20iptables%20-t%20%24%7Btable%7D%20-n%20--list%20%22%24%7Bchain_name%7D%22%20%3E%2Fdev%2Fnull%202%3E%261%0A%7D%0A%0Auntil%0A%20%20chain_exists%20%24%7Bchain_name%7D%0Ado%0A%20%20sleep%203%0A%20%20echo%20%22chain%20%24%7Bchain_name%7D%20no%20ready%22%0Adone%0Aiptables%20-t%20%24%7Btable%7D%20-I%20%24%7Bchain_name%7D%20-s%2010.128.0.0%2F14%20-o%20ovn-k8s-mp0%20-j%20ACCEPT%0A
+          verification: {}
+        mode: 0755
+        overwrite: true
+        path: /usr/local/bin/configure-migration-iptables-rules.sh
+    systemd:
+      units:
+      - dropins:
+        - contents: |
+            [Service]
+            ExecStartPost=/usr/local/bin/configure-migration-iptables-rules.sh
+          name: 20-migration-iptables-rules.conf
+        name: kubelet.service
